@@ -1,0 +1,45 @@
+import streamlit as st
+import requests
+
+# Konfigurasi IP Address dari ESP32
+ESP32_IP = "http://192.168.2.90"  # Ganti dengan IP Address ESP32 Anda
+
+def get_status():
+    try:
+        response = requests.get(f"{ESP32_IP}/status")
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        st.error(f"Error: {e}")
+        return None
+
+st.title("ESP32 Sensor Dashboard")
+
+# Menampilkan data sensor
+status = get_status()
+if status:
+    st.subheader("Sensor Data")
+    st.write(f"Suhu: {status['temperature']} °C")
+    st.write(f"Nilai Gas: {status['gas']}")
+    st.write(f"Gerakan Detected: {'Yes' if status['motion'] == 1 else 'No'}")
+
+    st.subheader("Kontrol Manual")
+    if st.button("Kontrol Suhu ON"):
+        requests.get(f"{ESP32_IP}/buzzer/on")
+    elif st.button("Kontrol Suhu OFF"):
+        requests.get(f"{ESP32_IP}/buzzer/off")
+
+    if st.button("Alarm Gas ON"):
+        requests.get(f"{ESP32_IP}/led/on")
+    elif st.button("Alarm Gas OFF"):
+        requests.get(f"{ESP32_IP}/led/off")
+
+    if st.button("LED Gerak ON"):
+        requests.get(f"{ESP32_IP}/led_pir/on")
+    elif st.button("LED Gerak OFF"):
+        requests.get(f"{ESP32_IP}/led_pir/off")
+
+    st.subheader("Status Pin Output")
+    st.write(f"Buzzer: {status['buzzer']}")
+    st.write(f"LED: {status['led']}")
+    st.write(f"LED PIR: {status['led_pir']}")
